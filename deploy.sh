@@ -41,17 +41,25 @@ CONFIGURED_PORT="${CONFIGURED_PORT:-80}"
 HOST_PORT=$(echo "$CONFIGURED_PORT" | grep -oE '[0-9]+$' || true)
 
 if [ -n "$HOST_PORT" ]; then
-  # Check if anything (other than our own containers) holds the port
   HOLDER=$(ss -tlnp 2>/dev/null | grep -E ":${HOST_PORT}[[:space:]]" | head -1 || true)
   if [ -n "$HOLDER" ]; then
-    # Allow if it's already our nginx container (redeploy case)
-    if echo "$HOLDER" | grep -q 'tenderwatch_nginx'; then
-      info "Port ${HOST_PORT} held by tenderwatch_nginx — will be released on 'up -d'."
+    # If the holder is docker-proxy, the port belongs to a Docker container.
+    # Check whether it's OUR nginx — if so, docker compose up -d will handle it.
+    if echo "$HOLDER" | grep -q 'docker-proxy'; then
+      NGINX_UP=$(docker compose ps --status running nginx 2>/dev/null | grep -c 'nginx' || true)
+      if [ "$NGINX_UP" -gt 0 ]; then
+        info "Port ${HOST_PORT} held by tenderwatch_nginx — will be restarted by 'up -d'."
+      else
+        echo ""
+        warn "Port ${HOST_PORT} is held by another Docker container:"
+        echo "  $HOLDER"
+        warn "Pick a free port and update PORT= in .env, then re-run."
+        abort "Aborting to avoid a failed 'docker compose up'."
+      fi
     else
       echo ""
-      warn "Port ${HOST_PORT} is already in use:"
+      warn "Port ${HOST_PORT} is already in use by a non-Docker process:"
       echo "  $HOLDER"
-      echo ""
       warn "Pick a free port and update PORT= in .env, then re-run."
       warn "Free ports check:  ss -tlnp | grep -v docker | grep -v tenderwatch"
       abort "Aborting to avoid a failed 'docker compose up'."
