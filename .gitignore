@@ -19,6 +19,7 @@ backend/instance/
 
 # Docker
 *.log
+docker-compose.override.yml
 
 # OS
 .DS_Store

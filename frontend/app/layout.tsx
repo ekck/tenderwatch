@@ -27,7 +27,7 @@ const ibmMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://tenderwatch.zanah.co.ke'),
+  metadataBase: new URL('https://tenderwatch.co.ke'),
   title: {
     default: 'TenderWatch Kenya — Public Procurement Tracker',
     template: '%s | TenderWatch Kenya',

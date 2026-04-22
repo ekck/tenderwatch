@@ -1,4 +1,4 @@
-.PHONY: help build up down logs restart sync shell-backend shell-frontend clean
+.PHONY: help build up down logs restart sync shell-backend shell-frontend clean deploy
 
 # Default target
 help:
@@ -16,6 +16,7 @@ help:
 	@echo "  make shell-backend  Open a shell in the backend container"
 	@echo "  make shell-frontend Open a shell in the frontend container"
 	@echo "  make clean          Stop and remove all containers + images"
+	@echo "  make deploy         Pull latest + build + start (runs deploy.sh)"
 	@echo ""
 
 # Build images
@@ -87,3 +88,7 @@ health:
 clean:
 	docker compose down --rmi all --volumes --remove-orphans
 	@echo "All containers, images and volumes removed."
+
+# Deploy (first-run and updates)
+deploy:
+	@chmod +x deploy.sh && ./deploy.sh
