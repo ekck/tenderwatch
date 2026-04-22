@@ -12,8 +12,9 @@ warn()  { echo -e "${YELLOW}[warn]${NC}   $*"; }
 abort() { echo -e "${RED}[error]${NC}  $*" >&2; exit 1; }
 
 # 1. Pull latest code
-info "Pulling latest from origin main..."
-git pull origin main
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+info "Pulling latest from origin ${BRANCH}..."
+git pull origin "${BRANCH}"
 
 # 2. Require .env
 if [ ! -f .env ]; then

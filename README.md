@@ -235,7 +235,7 @@ cd tenderwatch
 
 Or from your local machine:
 ```bash
-ssh user@your-vps "cd /path/to/tenderwatch && ./deploy.sh"
+ssh user@your-vps "cd /path/to/tenderwatch && git pull && ./deploy.sh"
 ```
 
 ---
