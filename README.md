@@ -145,16 +145,12 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-### 3. Clone and create the override file
+### 3. Clone and configure
 ```bash
 git clone git@github.com:ekck/tenderwatch.git
 cd tenderwatch
-
-# Tells Docker to bind nginx to localhost:8080 only (not public port 80)
 cp docker-compose.override.yml.example docker-compose.override.yml
 ```
-
-Change `8080` in `docker-compose.override.yml` if that port is already taken on your VPS.
 
 ### 4. First deploy
 ```bash
@@ -162,10 +158,20 @@ Change `8080` in `docker-compose.override.yml` if that port is already taken on 
 ```
 
 On first run this creates `.env` from the example and exits with instructions.
-Fill in the required values then run it again:
+Fill in the required values — including the `PORT` binding for a shared VPS:
 
 ```bash
-nano .env        # Set SECRET_KEY and ADMIN_TOKEN
+nano .env
+```
+
+```env
+SECRET_KEY=<long random string>
+ADMIN_TOKEN=<random token>
+PORT=127.0.0.1:8080    # Binds nginx to localhost only — system nginx proxies to it
+```
+
+Then run again:
+```bash
 ./deploy.sh      # Builds images and starts all services
 ```
 

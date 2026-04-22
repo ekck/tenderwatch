@@ -3,12 +3,6 @@
 # Docker Compose merges this with docker-compose.yml automatically.
 # Do NOT commit docker-compose.override.yml to git (it is gitignored).
 #
-# For plain/system Nginx: tenderwatch_nginx binds to localhost:8080 only.
-# System nginx proxies tenderwatch.co.ke → 127.0.0.1:8080.
-# Change 8080 here and in the system nginx site config if that port is taken.
+# No port changes needed here — set PORT=127.0.0.1:8080 in .env instead.
+# Docker Compose maps ${PORT}:80, so that binds nginx to localhost only.
 # ─────────────────────────────────────────────────────────────────────
-
-services:
-  nginx:
-    ports:
-      - "127.0.0.1:8080:80"    # Only reachable from localhost — no public port conflict
