@@ -68,17 +68,15 @@ restart:
 # Trigger a manual PPIP data sync
 sync:
 	@echo "Triggering PPIP sync via $(NGINX_URL) ..."
-	@curl -sf -X POST $(NGINX_URL)/api/tenders/sync/trigger \
+	@curl -s -X POST $(NGINX_URL)/api/tenders/sync/trigger \
 		-H "Host: tenderwatch.co.ke" \
-		-H "X-Admin-Token: $(ADMIN_TOKEN)" \
-		| python3 -m json.tool
+		-H "X-Admin-Token: $(ADMIN_TOKEN)"
 	@echo ""
 
 # Check sync status
 sync-status:
-	@curl -sf $(NGINX_URL)/api/tenders/sync/status \
-		-H "Host: tenderwatch.co.ke" \
-		| python3 -m json.tool
+	@curl -s $(NGINX_URL)/api/tenders/sync/status \
+		-H "Host: tenderwatch.co.ke"
 
 # Shell access
 shell-backend:
