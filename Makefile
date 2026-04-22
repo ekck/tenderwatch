@@ -1,13 +1,8 @@
 .PHONY: help build up down logs restart sync sync-status shell-backend shell-frontend health clean deploy
 
-# Derive the host:port to reach nginx from PORT in .env.
-# PORT can be "80" (local) or "127.0.0.1:8082" (VPS).
-# Either way, strip any interface prefix and keep just the port number,
-# then hit 127.0.0.1:<port> so the request reaches nginx regardless of environment.
--include .env
-export
-_RAW_PORT   := $(or $(PORT),80)
-_HOST_PORT  := $(lastword $(subst :, ,$(_RAW_PORT)))
+# Read PORT and ADMIN_TOKEN from .env via shell so Make never tries to parse .env itself.
+# PORT can be "80" (local) or "127.0.0.1:8082" (VPS) — we extract just the numeric part.
+_HOST_PORT  := $(shell grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2 | grep -oE '[0-9]+$$' || echo 80)
 NGINX_URL   := http://127.0.0.1:$(_HOST_PORT)
 ADMIN_TOKEN := $(shell grep -E '^ADMIN_TOKEN=' .env 2>/dev/null | cut -d= -f2)
 
