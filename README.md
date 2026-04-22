@@ -53,8 +53,7 @@ Edit `.env` — at minimum set a strong `SECRET_KEY` and `ADMIN_TOKEN`:
 ```env
 SECRET_KEY=your-long-random-secret-here
 ADMIN_TOKEN=your-admin-token-here
-RESEND_API_KEY=           # optional — for email alerts
-NEXT_PUBLIC_ADSENSE_ID=   # optional — add after AdSense approval
+RESEND_API_KEY=   # optional — for email alerts
 ```
 
 ### 2. Build and start
@@ -112,6 +111,7 @@ The sync runs automatically every day at **06:00 EAT (03:00 UTC)**.
 | `make shell-backend` | Shell into Flask container |
 | `make health` | Check HTTP status of all services |
 | `make clean` | Remove all containers + images |
+| `make deploy` | Pull latest + build + start (runs `deploy.sh`) |
 
 ---
 
@@ -124,34 +124,19 @@ All variables go in `.env` at the project root.
 | `SECRET_KEY` | ✅ Yes | Flask secret key — use a long random string |
 | `ADMIN_TOKEN` | ✅ Yes | Token for `/api/tenders/sync/trigger` endpoint |
 | `RESEND_API_KEY` | Optional | From resend.com — enables email alerts |
-| `NEXT_PUBLIC_ADSENSE_ID` | Optional | Google AdSense publisher ID (ca-pub-XXXX) |
-| `PORT` | Optional | Host port nginx listens on (default: 80) |
+| `PORT` | Optional | Host port nginx listens on (default: 80, unused on VPS) |
 | `FLASK_ENV` | Optional | `production` or `development` (default: production) |
 
 ---
 
-## Activating Google AdSense
+## Deployment to a VPS (shared server with other sites)
 
-1. Apply at [google.com/adsense](https://google.com/adsense) using your domain
-2. Add the verification script — paste your publisher ID into `.env`:
-   ```
-   NEXT_PUBLIC_ADSENSE_ID=ca-pub-XXXXXXXXXXXXXXXX
-   ```
-3. Rebuild the frontend image (AdSense ID is baked into the build):
-   ```bash
-   docker compose build frontend
-   docker compose up -d frontend
-   ```
-4. After approval, create ad units in AdSense dashboard and replace the
-   placeholder slot IDs in `frontend/components/ads/AdUnit.tsx` and the
-   page files. See `frontend/README.md` for the full slot reference table.
-
----
-
-## Deployment to a VPS (DigitalOcean / Hetzner / AWS EC2)
+This setup is designed for a VPS that already runs other Docker containers or sites.
+The internal nginx binds to `127.0.0.1:8080` (localhost only) — your system nginx
+proxies the domain to it, so there are no port conflicts.
 
 ### 1. Provision a server
-Ubuntu 22.04 LTS, minimum 1GB RAM (2GB recommended for the Next.js build).
+Ubuntu 22.04 LTS, minimum 1 GB RAM (2 GB recommended for the Next.js build).
 
 ### 2. Install Docker
 ```bash
@@ -160,38 +145,98 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-### 3. Clone and configure
+### 3. Clone and create the override file
 ```bash
-git clone https://github.com/youruser/tenderwatch
+git clone git@github.com:ekck/tenderwatch.git
 cd tenderwatch
-cp .env.example .env
-nano .env   # Fill in SECRET_KEY, ADMIN_TOKEN, RESEND_API_KEY
+
+# Tells Docker to bind nginx to localhost:8080 only (not public port 80)
+cp docker-compose.override.yml.example docker-compose.override.yml
 ```
 
-### 4. Point your domain
-Add a DNS A record:
-```
-tenderwatch.zanah.co.ke → your-server-ip
-```
+Change `8080` in `docker-compose.override.yml` if that port is already taken on your VPS.
 
-### 5. Build and start
+### 4. First deploy
 ```bash
-make build && make up
+./deploy.sh
 ```
 
-### 6. Add HTTPS with Certbot (recommended)
-
-Install nginx on the host as a TLS terminator, then proxy to Docker's port 80.
-Or use Traefik as the reverse proxy with automatic Let's Encrypt:
+On first run this creates `.env` from the example and exits with instructions.
+Fill in the required values then run it again:
 
 ```bash
-# Option A: Certbot on host nginx
+nano .env        # Set SECRET_KEY and ADMIN_TOKEN
+./deploy.sh      # Builds images and starts all services
+```
+
+### 5. Point your domain
+Add DNS A records:
+```
+tenderwatch.co.ke     → your-server-ip
+www.tenderwatch.co.ke → your-server-ip
+```
+
+### 6. Add a system nginx site
+
+Create `/etc/nginx/sites-available/tenderwatch`:
+
+```nginx
+server {
+    listen 80;
+    server_name tenderwatch.co.ke www.tenderwatch.co.ke;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+    }
+}
+```
+
+Enable it and reload:
+```bash
+sudo ln -s /etc/nginx/sites-available/tenderwatch /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### 7. Add HTTPS with Certbot
+
+```bash
 sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d tenderwatch.zanah.co.ke
+sudo certbot --nginx -d tenderwatch.co.ke -d www.tenderwatch.co.ke
 ```
 
-Update `PORT=8080` in `.env` so Docker nginx doesn't conflict with host nginx,
-then configure host nginx to proxy `https://tenderwatch.zanah.co.ke` → `http://localhost:8080`.
+Certbot updates the nginx site config automatically and sets up auto-renewal.
+
+### 8. Load procurement data
+
+```bash
+make sync          # Triggers the first PPIP data download
+make sync-status   # Check progress
+```
+
+The sync also runs automatically every day at **06:00 EAT (03:00 UTC)**.
+
+---
+
+## Updating the app
+
+SSH into the VPS and run:
+
+```bash
+cd tenderwatch
+./deploy.sh      # pulls latest, rebuilds, restarts
+```
+
+Or from your local machine:
+```bash
+ssh user@your-vps "cd /path/to/tenderwatch && ./deploy.sh"
+```
 
 ---
 
