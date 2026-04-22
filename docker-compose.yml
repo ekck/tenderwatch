@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────────
+  # Flask API backend
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tenderwatch_backend
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: sqlite:////data/tenderwatch.db
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-change-me-in-production}
+      PPIP_BASE_URL: https://tenders.go.ke/ocds
+    volumes:
+      - ./data:/data          # SQLite database persisted on host
+    expose:
+      - "5000"
+    networks:
+      - tenderwatch_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/tenders/sync/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ─────────────────────────────────────────────
+  # Next.js frontend
+  # ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""          # Empty = browser calls /api/* via nginx proxy
+        NEXT_PUBLIC_ADSENSE_ID: ${NEXT_PUBLIC_ADSENSE_ID:-}
+    container_name: tenderwatch_frontend
+    restart: unless-stopped
+    environment:
+      # Server-side SSR calls go direct to backend via Docker internal DNS
+      INTERNAL_API_URL: http://backend:5000
+    expose:
+      - "3000"
+    networks:
+      - tenderwatch_net
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ─────────────────────────────────────────────
+  # Nginx reverse proxy
+  # ─────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: tenderwatch_nginx
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - tenderwatch_net
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+  tenderwatch_net:
+    driver: bridge
+
+volumes:
+  tenderwatch_data:

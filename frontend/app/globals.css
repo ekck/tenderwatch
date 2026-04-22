@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --forest:    #1a4731;
+    --forest-2:  #1f5a3d;
+    --forest-3:  #2d7a56;
+    --gold:      #c9a84c;
+    --gold-2:    #e8c96a;
+    --gold-3:    #f5e0a0;
+    --cream:     #faf7f2;
+    --cream-2:   #f3ede3;
+    --cream-3:   #e8dfd0;
+    --ink:       #1a1a18;
+    --ink-2:     #2e2e2a;
+    --ink-3:     #4a4a44;
+    --muted:     #7a7a70;
+    --muted-2:   #a0a090;
+    --divider:   #ddd8ce;
+    --white:     #ffffff;
+    --red:       #b83232;
+    --green-alt: #2a6e42;
+  }
+
+  html, body {
+    background-color: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream-2); }
+::-webkit-scrollbar-thumb { background: var(--cream-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+/* ── Typography ────────────────────────────── */
+.font-display { font-family: var(--font-display), Georgia, serif; }
+.font-body    { font-family: var(--font-body), system-ui, sans-serif; }
+.font-mono    { font-family: var(--font-mono), 'Courier New', monospace; }
+.kes-value    { font-family: var(--font-mono), monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ── Cards & Elevation ─────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(26,71,49,0.06), 0 1px 2px rgba(26,71,49,0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 12px rgba(26,71,49,0.1), 0 2px 4px rgba(26,71,49,0.06);
+  border-color: var(--cream-3);
+  transform: translateY(-1px);
+}
+.card-flat {
+  background: var(--white);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+}
+
+/* ── Tender Cards ───────────────────────────── */
+.tender-card {
+  background: var(--white);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(26,71,49,0.05);
+  transition: all 0.2s ease;
+}
+.tender-card:hover {
+  box-shadow: 0 4px 16px rgba(26,71,49,0.12);
+  border-color: var(--forest-3);
+  transform: translateY(-1px);
+}
+
+/* ── Status Badges ─────────────────────────── */
+.badge-active    { background: #e8f5ee; color: #1a6b3a; border: 1px solid #a8d8bc; font-weight: 600; }
+.badge-complete  { background: #f0ece4; color: #5a5a50; border: 1px solid #c8c4b8; }
+.badge-cancelled { background: #fceaea; color: #8b2020; border: 1px solid #e8b4b4; }
+.badge-open      { background: #fef8e8; color: #7a5a10; border: 1px solid #e8d08a; font-weight: 600; }
+.badge-direct    { background: #fceaea; color: #8b2020; border: 1px solid #e8b4b4; }
+.badge-restricted{ background: #f0eaf8; color: #5a3080; border: 1px solid #c8a8e8; }
+
+/* ── Data Table Rows ───────────────────────── */
+.data-row { border-bottom: 1px solid var(--divider); transition: background 0.15s ease; }
+.data-row:hover { background: var(--cream); }
+
+/* ── Ad Container ──────────────────────────── */
+.ad-container {
+  background: var(--cream-2);
+  border: 1px dashed var(--cream-3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 60px;
+}
+.ad-label {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  color: var(--muted-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Prose / Static pages ──────────────────── */
+.tw-prose h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--forest);
+  margin-bottom: 0.6rem;
+  margin-top: 0;
+  font-family: var(--font-display), Georgia, serif;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3rem;
+  display: inline-block;
+}
+.tw-prose p  { color: var(--ink-3); line-height: 1.75; margin-bottom: 1rem; }
+.tw-prose ul { list-style: disc; padding-left: 1.25rem; color: var(--ink-3); margin-bottom: 1rem; }
+.tw-prose li { margin-bottom: 0.25rem; line-height: 1.6; }
+.tw-prose strong { color: var(--ink); font-weight: 600; }
+.tw-prose a  { color: var(--forest); text-decoration: underline; }
+.tw-prose a:hover { color: var(--forest-3); }
+
+/* ── Animations ────────────────────────────── */
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+.animate-fade-in  { animation: fadeIn 0.4s ease forwards; }
+.animate-slide-up { animation: slideUp 0.35s ease forwards; }
+
+/* ── Focus ring ────────────────────────────── */
+:focus-visible { outline: 2px solid var(--forest-3); outline-offset: 2px; border-radius: 4px; }

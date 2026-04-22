@@ -1,0 +1,17 @@
+import { MetadataRoute } from 'next'
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const base = 'https://tenderwatch.zanah.co.ke'
+  const now = new Date()
+
+  return [
+    { url: base, lastModified: now, changeFrequency: 'daily', priority: 1 },
+    { url: `${base}/tenders`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/entities`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${base}/analytics`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${base}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/terms`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+  ]
+}
