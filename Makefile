@@ -1,4 +1,15 @@
-.PHONY: help build up down logs restart sync shell-backend shell-frontend clean deploy
+.PHONY: help build up down logs restart sync sync-status shell-backend shell-frontend health clean deploy
+
+# Derive the host:port to reach nginx from PORT in .env.
+# PORT can be "80" (local) or "127.0.0.1:8082" (VPS).
+# Either way, strip any interface prefix and keep just the port number,
+# then hit 127.0.0.1:<port> so the request reaches nginx regardless of environment.
+-include .env
+export
+_RAW_PORT   := $(or $(PORT),80)
+_HOST_PORT  := $(lastword $(subst :, ,$(_RAW_PORT)))
+NGINX_URL   := http://127.0.0.1:$(_HOST_PORT)
+ADMIN_TOKEN := $(shell grep -E '^ADMIN_TOKEN=' .env 2>/dev/null | cut -d= -f2)
 
 # Default target
 help:
@@ -13,8 +24,10 @@ help:
 	@echo "  make logs-frontend  Tail frontend logs only"
 	@echo "  make restart        Restart all services"
 	@echo "  make sync           Trigger a manual PPIP data sync"
+	@echo "  make sync-status    Check last sync status"
 	@echo "  make shell-backend  Open a shell in the backend container"
 	@echo "  make shell-frontend Open a shell in the frontend container"
+	@echo "  make health         Check HTTP status of all services"
 	@echo "  make clean          Stop and remove all containers + images"
 	@echo "  make deploy         Pull latest + build + start (runs deploy.sh)"
 	@echo ""
@@ -28,9 +41,7 @@ up:
 	@cp -n .env.example .env 2>/dev/null || true
 	docker compose up -d
 	@echo ""
-	@echo "✅ TenderWatch running at http://localhost:80"
-	@echo "   API:      http://localhost:80/api/tenders/"
-	@echo "   Frontend: http://localhost:80"
+	@echo "TenderWatch running at $(NGINX_URL)"
 	@echo ""
 
 # Start with logs visible
@@ -61,15 +72,18 @@ restart:
 
 # Trigger a manual PPIP data sync
 sync:
-	@echo "Triggering PPIP sync..."
-	@curl -s -X POST http://localhost:80/api/tenders/sync/trigger \
-		-H "X-Admin-Token: $$(grep ADMIN_TOKEN .env | cut -d= -f2)" \
+	@echo "Triggering PPIP sync via $(NGINX_URL) ..."
+	@curl -sf -X POST $(NGINX_URL)/api/tenders/sync/trigger \
+		-H "Host: tenderwatch.co.ke" \
+		-H "X-Admin-Token: $(ADMIN_TOKEN)" \
 		| python3 -m json.tool
 	@echo ""
 
 # Check sync status
 sync-status:
-	@curl -s http://localhost:80/api/tenders/sync/status | python3 -m json.tool
+	@curl -sf $(NGINX_URL)/api/tenders/sync/status \
+		-H "Host: tenderwatch.co.ke" \
+		| python3 -m json.tool
 
 # Shell access
 shell-backend:
@@ -80,9 +94,9 @@ shell-frontend:
 
 # Health check
 health:
-	@echo "Backend:  $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:80/api/tenders/sync/status)"
-	@echo "Frontend: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:80)"
-	@echo "Nginx:    $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:80/health)"
+	@echo "Backend:  $$(curl -s -o /dev/null -w '%{http_code}' $(NGINX_URL)/api/tenders/sync/status -H 'Host: tenderwatch.co.ke')"
+	@echo "Frontend: $$(curl -s -o /dev/null -w '%{http_code}' $(NGINX_URL)/ -H 'Host: tenderwatch.co.ke')"
+	@echo "Nginx:    $$(curl -s -o /dev/null -w '%{http_code}' $(NGINX_URL)/health -H 'Host: tenderwatch.co.ke')"
 
 # Clean everything
 clean:
