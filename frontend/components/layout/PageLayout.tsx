@@ -1,5 +1,4 @@
 import Sidebar from './Sidebar'
-import { LeaderboardAd } from '@/components/ads/AdUnit'
 
 interface Props {
   children: React.ReactNode
@@ -7,10 +6,9 @@ interface Props {
   fullWidth?: boolean
 }
 
-export default function PageLayout({ children, leaderboardSlot, fullWidth = false }: Props) {
+export default function PageLayout({ children, leaderboardSlot: _leaderboardSlot, fullWidth = false }: Props) {
   return (
     <div className="bg-cream min-h-screen">
-      {leaderboardSlot && <LeaderboardAd slot={leaderboardSlot} />}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {fullWidth ? (
           children

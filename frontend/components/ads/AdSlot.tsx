@@ -2,8 +2,6 @@
 import { useEffect, useRef } from 'react'
 
 // ─── Slot registry ────────────────────────────────────────────────────────────
-// Each key maps to one ad placement. Iframe slots use HighPerformanceFormat;
-// native-banner uses Adsterra via profitablecpmratenetwork.
 const SLOTS = {
   '300x250': {
     kind: 'hpf-iframe' as const,
@@ -29,22 +27,20 @@ const SLOTS = {
 export type AdSlotId = keyof typeof SLOTS
 
 // ─── AdSlot ───────────────────────────────────────────────────────────────────
-// Renders one ad placement. Dynamically injects the required scripts into its
-// own container div so multiple instances on the same page are isolated.
 export function AdSlot({ slot, className = '' }: { slot: AdSlotId; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
+  const scriptRef = useRef<HTMLDivElement>(null)
   const loaded = useRef(false)
   const cfg = SLOTS[slot]
 
   useEffect(() => {
-    if (!ref.current || loaded.current) return
+    if (!scriptRef.current || loaded.current) return
     loaded.current = true
-    const el = ref.current
+    const el = scriptRef.current
 
     if (cfg.kind === 'hpf-iframe') {
-      // atOptions must be set inline immediately before invoke.js executes
+      // Set atOptions synchronously before invoke.js loads so it can read them.
+      // Both scripts are siblings inside a plain block div — no flex interference.
       const optScript = document.createElement('script')
-      optScript.type = 'text/javascript'
       optScript.text = [
         "atOptions = {",
         `  'key' : '${cfg.key}',`,
@@ -57,7 +53,6 @@ export function AdSlot({ slot, className = '' }: { slot: AdSlotId; className?: s
       el.appendChild(optScript)
 
       const invokeScript = document.createElement('script')
-      invokeScript.type = 'text/javascript'
       invokeScript.src = cfg.src
       el.appendChild(invokeScript)
     }
@@ -73,28 +68,27 @@ export function AdSlot({ slot, className = '' }: { slot: AdSlotId; className?: s
 
   if (cfg.kind === 'hpf-iframe') {
     return (
-      <div
-        ref={ref}
-        className={`ad-container ${className}`}
-        style={{ width: cfg.width, height: cfg.height, overflow: 'hidden', flexShrink: 0 }}
-      >
+      // Outer wrapper: just positions the label. No flex on the script container.
+      <div className={`relative ${className}`} style={{ width: cfg.width, height: cfg.height }}>
         <span className="ad-label">Advertisement</span>
+        {/* scriptRef div is a plain block — invoke.js inserts its iframe here */}
+        <div ref={scriptRef} style={{ width: cfg.width, height: cfg.height, lineHeight: 0 }} />
       </div>
     )
   }
 
-  // adsterra-native: the invoke.js fills the container div by its specific ID
+  // adsterra-native
   return (
-    <div ref={ref} className={`ad-container ${className}`}>
+    <div className={`relative ${className}`}>
       <span className="ad-label">Advertisement</span>
-      <div id={cfg.containerId} />
+      <div ref={scriptRef}>
+        <div id={cfg.containerId} />
+      </div>
     </div>
   )
 }
 
 // ─── GlobalAds ────────────────────────────────────────────────────────────────
-// Mount once in layout.tsx. Loads the SocialBar (floating sticky bar) and
-// arms the Popunder to fire on the first user click of each page session.
 const SOCIAL_BAR_SRC =
   'https://pl29214640.profitablecpmratenetwork.com/93/9c/42/939c42665885fca4e84dc0c78b649c49.js'
 
@@ -112,13 +106,10 @@ export function GlobalAds() {
 }
 
 // ─── Convenience wrappers ─────────────────────────────────────────────────────
-// These keep the same API as the old AdUnit exports so all existing page
-// imports continue to work without modification.
-
 export function LeaderboardAd({ slot: _slot }: { slot: string }) {
   return (
-    <div className="w-full flex justify-center py-2 bg-cream-2 border-b border-divider overflow-x-auto">
-      <AdSlot slot="728x90" className="max-w-full" />
+    <div className="w-full flex justify-center py-3 bg-cream-2 border-b border-divider">
+      <AdSlot slot="300x250" />
     </div>
   )
 }
@@ -127,8 +118,6 @@ export function RectangleAd({ slot: _slot }: { slot: string }) {
   return <AdSlot slot="300x250" />
 }
 
-// InContentAd uses the 300x250 slot so multiple instances on one page are safe.
-// Use <AdSlot slot="native-banner" /> directly where you want the native unit.
 export function InContentAd({ slot: _slot }: { slot: string }) {
   return (
     <div className="my-6 flex justify-center">

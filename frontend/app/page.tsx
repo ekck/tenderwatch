@@ -3,7 +3,7 @@ import {
   getTenders, getAnalyticsSummary, getByCounty, getByCategory,
   getTopEntities, formatKES, formatDate, statusClass, methodClass, resolveStatus
 } from '@/lib/api'
-import { LeaderboardAd, InContentAd } from '@/components/ads/AdUnit'
+import { InContentAd } from '@/components/ads/AdUnit'
 import AlertSignup from '@/components/ui/AlertSignup'
 
 export const metadata = {
@@ -35,8 +35,6 @@ export default async function HomePage() {
 
   return (
     <div className="bg-cream">
-      <LeaderboardAd slot="1234567890" />
-
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-forest">
         <div className="absolute inset-0 opacity-10"
