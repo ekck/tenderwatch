@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {
   getTenders, getAnalyticsSummary, getByCounty, getByCategory,
-  getTopEntities, formatKES, formatDate, statusClass, methodClass
+  getTopEntities, formatKES, formatDate, statusClass, methodClass, resolveStatus
 } from '@/lib/api'
 import { LeaderboardAd, InContentAd } from '@/components/ads/AdUnit'
 import AlertSignup from '@/components/ui/AlertSignup'
@@ -121,8 +121,8 @@ export default async function HomePage() {
                 <h3 className="text-ink font-bold text-sm leading-snug line-clamp-2 flex-1">
                   {tender.title || 'Untitled Tender'}
                 </h3>
-                <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-mono font-semibold ${statusClass(tender.status)}`}>
-                  {tender.status}
+                <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-mono font-semibold ${statusClass(resolveStatus(tender.status, tender.tender_period_end))}`}>
+                  {resolveStatus(tender.status, tender.tender_period_end)}
                 </span>
               </div>
               <div className="flex items-center gap-2 flex-wrap mb-2">

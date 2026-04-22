@@ -151,11 +151,21 @@ export function formatDate(dateStr: string | null | undefined): string {
   })
 }
 
+// Returns the display status, overriding 'active' to 'closed' when the
+// tender period has already ended — the DB value is never auto-updated.
+export function resolveStatus(status: string, periodEnd: string | null): string {
+  if (status?.toLowerCase() === 'active' && periodEnd && new Date(periodEnd) < new Date()) {
+    return 'closed'
+  }
+  return status?.toLowerCase() ?? 'complete'
+}
+
 export function statusClass(status: string): string {
   return {
     active: 'badge-active',
     complete: 'badge-complete',
     cancelled: 'badge-cancelled',
+    closed: 'badge-closed',
   }[status?.toLowerCase()] || 'badge-complete'
 }
 

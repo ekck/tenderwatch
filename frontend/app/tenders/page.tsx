@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getTenders, formatKES, formatDate, statusClass, methodClass } from '@/lib/api'
+import { getTenders, formatKES, formatDate, statusClass, methodClass, resolveStatus } from '@/lib/api'
 import { RectangleAd } from '@/components/ads/AdUnit'
 import PageLayout from '@/components/layout/PageLayout'
 import type { Metadata } from 'next'
@@ -93,7 +93,7 @@ export default async function TendersPage({ searchParams }: { searchParams: Sear
                     <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-mono font-medium ${statusClass(tender.status)}`}>{tender.status}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-mono font-medium ${statusClass(resolveStatus(tender.status, tender.tender_period_end))}`}>{resolveStatus(tender.status, tender.tender_period_end)}</span>
                           {tender.procurement_method && (
                             <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${methodClass(tender.procurement_method)}`}>{tender.procurement_method}</span>
                           )}

@@ -1,4 +1,4 @@
-import { getTender, formatKES, formatDate, statusClass, methodClass } from '@/lib/api'
+import { getTender, formatKES, formatDate, statusClass, methodClass, resolveStatus } from '@/lib/api'
 import { InContentAd } from '@/components/ads/AdUnit'
 import PageLayout from '@/components/layout/PageLayout'
 import Link from 'next/link'
@@ -25,9 +25,8 @@ export default async function TenderDetailPage({ params }: Props) {
     ? `https://tenders.go.ke/website/tenders/view/${tender.ocid}`
     : 'https://tenders.go.ke'
 
-  const isOpen = tender.status === 'active' &&
-    tender.tender_period_end &&
-    new Date(tender.tender_period_end) > new Date()
+  const displayStatus = resolveStatus(tender.status, tender.tender_period_end)
+  const isOpen = displayStatus === 'active'
 
   const daysLeft = tender.tender_period_end
     ? Math.ceil((new Date(tender.tender_period_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -50,8 +49,8 @@ export default async function TenderDetailPage({ params }: Props) {
           <div className="lg:col-span-2 space-y-6">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-xs px-2.5 py-1 rounded-full font-mono font-medium ${statusClass(tender.status)}`}>
-                {tender.status?.toUpperCase()}
+              <span className={`text-xs px-2.5 py-1 rounded-full font-mono font-medium ${statusClass(displayStatus)}`}>
+                {displayStatus.toUpperCase()}
               </span>
               {tender.procurement_method && (
                 <span className={`text-xs px-2.5 py-1 rounded-full font-mono ${methodClass(tender.procurement_method)}`}>

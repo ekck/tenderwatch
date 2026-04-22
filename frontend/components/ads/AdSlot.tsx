@@ -97,8 +97,6 @@ export function AdSlot({ slot, className = '' }: { slot: AdSlotId; className?: s
 // arms the Popunder to fire on the first user click of each page session.
 const SOCIAL_BAR_SRC =
   'https://pl29214640.profitablecpmratenetwork.com/93/9c/42/939c42665885fca4e84dc0c78b649c49.js'
-const POPUNDER_URL =
-  'https://www.profitablecpmratenetwork.com/mub5xkqr2u?key=e910da9fdaa4c7692c4a4a2491e1f303'
 
 export function GlobalAds() {
   useEffect(() => {
@@ -108,10 +106,6 @@ export function GlobalAds() {
       s.src = SOCIAL_BAR_SRC
       document.head.appendChild(s)
     }
-
-    const firePopunder = () => window.open(POPUNDER_URL, '_blank', 'noopener,noreferrer')
-    document.addEventListener('click', firePopunder, { once: true })
-    return () => document.removeEventListener('click', firePopunder)
   }, [])
 
   return null

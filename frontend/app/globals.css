@@ -93,6 +93,7 @@
 .badge-active    { background: #e8f5ee; color: #1a6b3a; border: 1px solid #a8d8bc; font-weight: 600; }
 .badge-complete  { background: #f0ece4; color: #5a5a50; border: 1px solid #c8c4b8; }
 .badge-cancelled { background: #fceaea; color: #8b2020; border: 1px solid #e8b4b4; }
+.badge-closed    { background: #f5efe4; color: #6b5a3a; border: 1px solid #d8c8a8; }
 .badge-open      { background: #fef8e8; color: #7a5a10; border: 1px solid #e8d08a; font-weight: 600; }
 .badge-direct    { background: #fceaea; color: #8b2020; border: 1px solid #e8b4b4; }
 .badge-restricted{ background: #f0eaf8; color: #5a3080; border: 1px solid #c8a8e8; }

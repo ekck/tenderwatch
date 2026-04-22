@@ -1,4 +1,4 @@
-import { getEntity, formatKES, formatDate, statusClass, methodClass } from '@/lib/api'
+import { getEntity, formatKES, formatDate, statusClass, methodClass, resolveStatus } from '@/lib/api'
 import { InContentAd } from '@/components/ads/AdUnit'
 import PageLayout from '@/components/layout/PageLayout'
 import Link from 'next/link'
@@ -81,8 +81,8 @@ export default async function EntityDetailPage({ params }: Props) {
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={`text-xs px-2 py-0.5 rounded font-mono ${statusClass(tender.status)}`}>
-                          {tender.status}
+                        <span className={`text-xs px-2 py-0.5 rounded font-mono ${statusClass(resolveStatus(tender.status, tender.tender_period_end))}`}>
+                          {resolveStatus(tender.status, tender.tender_period_end)}
                         </span>
                         {tender.procurement_method && (
                           <span className={`text-xs px-2 py-0.5 rounded font-mono ${methodClass(tender.procurement_method)}`}>
