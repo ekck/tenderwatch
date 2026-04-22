@@ -41,31 +41,23 @@ CONFIGURED_PORT="${CONFIGURED_PORT:-80}"
 HOST_PORT=$(echo "$CONFIGURED_PORT" | grep -oE '[0-9]+$' || true)
 
 if [ -n "$HOST_PORT" ]; then
-  HOLDER=$(ss -tlnp 2>/dev/null | grep -E ":${HOST_PORT}[[:space:]]" | head -1 || true)
-  if [ -n "$HOLDER" ]; then
-    # If the holder is docker-proxy, the port belongs to a Docker container.
-    # Check whether it's OUR nginx — if so, docker compose up -d will handle it.
-    if echo "$HOLDER" | grep -q 'docker-proxy'; then
-      NGINX_UP=$(docker compose ps --status running nginx 2>/dev/null | grep -c 'nginx' || true)
-      if [ "$NGINX_UP" -gt 0 ]; then
-        info "Port ${HOST_PORT} held by tenderwatch_nginx — will be restarted by 'up -d'."
-      else
-        echo ""
-        warn "Port ${HOST_PORT} is held by another Docker container:"
-        echo "  $HOLDER"
-        warn "Pick a free port and update PORT= in .env, then re-run."
-        abort "Aborting to avoid a failed 'docker compose up'."
-      fi
-    else
+  # If our own nginx container is already running, it owns the port — safe to proceed.
+  OUR_NGINX=$(docker ps --filter "name=tenderwatch_nginx" --filter "status=running" -q 2>/dev/null || true)
+  if [ -n "$OUR_NGINX" ]; then
+    info "Port ${HOST_PORT} held by tenderwatch_nginx — will be restarted by 'up -d'."
+  else
+    # Port held by something else entirely — abort before docker compose up fails.
+    HOLDER=$(ss -tlnp 2>/dev/null | grep -E ":${HOST_PORT}[[:space:]]" | head -1 || true)
+    if [ -n "$HOLDER" ]; then
       echo ""
-      warn "Port ${HOST_PORT} is already in use by a non-Docker process:"
+      warn "Port ${HOST_PORT} is already in use:"
       echo "  $HOLDER"
       warn "Pick a free port and update PORT= in .env, then re-run."
-      warn "Free ports check:  ss -tlnp | grep -v docker | grep -v tenderwatch"
+      warn "Free ports check:  ss -tlnp"
       abort "Aborting to avoid a failed 'docker compose up'."
+    else
+      info "Port ${HOST_PORT} is free."
     fi
-  else
-    info "Port ${HOST_PORT} is free."
   fi
 fi
 
