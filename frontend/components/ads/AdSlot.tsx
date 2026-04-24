@@ -100,6 +100,26 @@ export function GlobalAds() {
       s.src = SOCIAL_BAR_SRC
       document.head.appendChild(s)
     }
+
+    const reposition = (el: HTMLElement) => {
+      if (el.style.position === 'fixed' && (el.style.top === '0px' || el.style.top === '0')) {
+        el.style.top = 'auto'
+        el.style.bottom = '0'
+      }
+    }
+
+    Array.from(document.body.children).forEach(el => reposition(el as HTMLElement))
+
+    const observer = new MutationObserver(mutations => {
+      for (const m of mutations) {
+        m.addedNodes.forEach(node => {
+          if (node instanceof HTMLElement) reposition(node)
+        })
+      }
+    })
+    observer.observe(document.body, { childList: true })
+
+    return () => observer.disconnect()
   }, [])
 
   return null
